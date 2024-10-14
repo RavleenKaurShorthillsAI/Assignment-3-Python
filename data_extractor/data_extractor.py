@@ -1,5 +1,8 @@
 from PyPDF2 import PdfReader
 import docx
+import pdfplumber
+from PIL import Image
+import io
 from pptx.presentation import Presentation  # Correct import for Presentation
 
 class DataExtractor:
@@ -49,3 +52,35 @@ class DataExtractor:
 
         else:
             raise ValueError("Unsupported file format for text extraction.")
+    def extract_tables(self):
+        """Extract tables from the loaded file."""
+        if isinstance(self.content, PdfReader):
+            tables = []
+            with pdfplumber.open(self.file_loader.file_path) as pdf:
+                for page in pdf.pages:
+                    tables.extend(page.extract_tables())
+            return tables
+        else:
+            print("Table extraction is only supported for PDFs at the moment.")
+            return []
+    
+    def extract_images(self):
+        """Extract images from the loaded PDF."""
+        images = []
+        
+        if isinstance(self.content, PdfReader):
+            with pdfplumber.open(self.file_loader.file_path) as pdf:
+                for page_num, page in enumerate(pdf.pages):
+                    # Iterate over images found on the page
+                    for img_index, img in enumerate(page.images):
+                        # img is a dictionary with image attributes; 'stream' contains image bytes
+                        img_data = page.images[img_index]
+                        img_bytes = img_data["stream"].get_data()
+                        
+                        # Convert bytes to an image
+                        image = Image.open(io.BytesIO(img_bytes))
+                        image_path = f"output/page_{page_num+1}_image_{img_index+1}.png"
+                        image.save(image_path)
+                        images.append(image_path)
+        
+        return images
