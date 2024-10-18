@@ -13,10 +13,10 @@ This Assignment provides a modular Python class structure for extracting text, h
 - **Storage Options:** Supports storing extracted data either as files or in an SQL database.
 
 ## Assignment Folder Structure
-
-```bash
+```
 Python-Assignment/
 ├── file_loader/
+│   ├── file_loader.py         # Abstract class for file loading
 │   ├── pdf_loader.py          # Class for loading and processing PDF files
 │   ├── docx_loader.py         # Class for loading and processing DOCX files
 │   └── ppt_loader.py          # Class for loading and processing PPT files
@@ -24,13 +24,12 @@ Python-Assignment/
 │   └── data_extractor.py      # Class for extracting text, images, tables, and links
 ├── storage/
 │   ├── file_storage.py        # Class for saving data to files (text, images, tables)
-│   └── sql_storage.py         # Class for storing data in an SQL database
-├── samples/                   # Directory containing sample files for testing (PDF, DOCX, PPT)
+│   ├── sql_storage.py         # Class for storing data in an SQL database
+│   └── storage.py             # Abstract class for storage handling
+├── tests/                     # Directory containing test files (PDF, DOCX, PPT) for testing
 ├── output/                    # Directory where extracted files will be stored
 ├── main.py                    # Script for running the tests and extraction
 └── README.md                  # Project documentation (this file)
-
-
 ```
 - Set up a Python virtual environment and install dependencies:
 ```
@@ -44,6 +43,16 @@ DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=extract_data_db
+```
+
+```
+Dependencies
+pdfplumber: For extracting content from PDF files.
+PyPDF2: For handling PDF metadata.
+python-docx: For extracting data from DOCX files.
+python-pptx: For extracting data from PPT files.
+Pillow: For handling image files.
+mysql-connector-python: For storing metadata in a MySQL database.
 ```
 ## Version
 - Python Version: 3.10.0
