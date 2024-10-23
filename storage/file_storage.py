@@ -1,9 +1,8 @@
 import os
 import csv
-from data_extractor import PDFDataExtractor, DOCXDataExtractor, PPTDataExtractor
-from file_loader.pdf_loader import PDFLoader
-from file_loader.docx_loader import DOCXLoader
-from file_loader.ppt_loader import PPTLoader
+from data_extractor.data_extractor import UniversalDataExtractor
+from file_loader.concrete_file_loader import Loader
+
 from PIL import Image
 import io
 from tabulate import tabulate  # Importing tabulate for pretty table display
@@ -19,15 +18,29 @@ class FileStorage:
         base_folder = os.path.join(self.output_dir, extractor.get_file_name())
         os.makedirs(base_folder, exist_ok=True)
 
-        # Store extracted text
+
+        # Extract text using the extractor
         data = extractor.extract_text()
+
+        # Ensure the base_folder exists
+        if not os.path.exists(base_folder):
+            os.makedirs(base_folder)
+
+        # Print the extracted data for debugging
+        # print(f"Extracted Data: {data}")
+
+        # Check if data contains 'text' and if the text is not empty
         if data and 'text' in data and data['text'].strip():
             text_file_path = os.path.join(base_folder, "extracted_text.txt")
+            
+            # Write only the 'text' part of the data to the file
             with open(text_file_path, 'w', encoding='utf-8') as text_file:
                 text_file.write(data['text'])
+            
             print(f"Text data saved to {text_file_path}")
         else:
             print("No text data extracted.")
+
 
         # Store tables
         tables = extractor.extract_tables()
