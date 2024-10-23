@@ -3,34 +3,51 @@ from mysql.connector import Error
 import os
 
 class SQLStorage:
+    """
+    SQLStorage class responsible for storing extracted data in a MySQL database.
+    Handles the connection, table creation, and data insertion.
+    """
+
     def __init__(self, db_config):
-        """Initialize the SQLStorage class with database configuration and create connection."""
+        """
+        Initialize the SQLStorage class with database configuration and create a connection.
+        :param db_config: Dictionary containing database configuration (user, password, host, database).
+        """
         self.db_config = db_config
         self.connection = None
         self.create_connection()  # Ensure connection is established when the class is instantiated
 
     def create_connection(self):
-        """Create a database connection."""
+        """
+        Create a database connection using the MySQL connector.
+        """
         try:
+            # Connect to the MySQL database using provided configuration
             connection = mysql.connector.connect(
                 user=self.db_config['user'],
                 password=self.db_config['password'],
                 host=self.db_config['host'],
                 database=self.db_config['database']
             )
+            # Check if the connection is successfully established
             if connection.is_connected():
                 self.connection = connection
                 print("Connection to MySQL established")
         except mysql.connector.Error as e:
+            # Handle connection errors
             print(f"Error connecting to MySQL: {e}")
             self.connection = None
 
     def create_tables(self):
-        """Create tables for storing extracted data."""
+        """
+        Create tables in the MySQL database for storing extracted data.
+        Creates tables for files, texts, tables, images, metadata, and links.
+        """
         if self.connection is None:
             print("No database connection. Cannot create tables.")
             return
 
+        # SQL statements for creating the necessary tables
         create_statements = [
             """
             CREATE TABLE IF NOT EXISTS extracted_files (
@@ -83,33 +100,39 @@ class SQLStorage:
             """
         ]
 
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor()  # Create a cursor for executing SQL statements
         try:
+            # Execute each SQL statement to create the tables
             for statement in create_statements:
                 cursor.execute(statement)
-            self.connection.commit()
+            self.connection.commit()  # Commit the changes to the database
             print("Tables created successfully.")
         except Error as e:
+            # Handle errors during table creation
             print(f"Error creating tables: {e}")
         finally:
-            cursor.close()
+            cursor.close()  # Close the cursor after executing statements
 
     def store_data(self, extractor):
-        """Store extracted data into the database."""
+        """
+        Store the extracted data (text, tables, images, metadata, and links) into the database.
+        :param extractor: An instance of UniversalDataExtractor that extracts data from files.
+        """
         if self.connection is None:
             print("No database connection. Cannot store data.")
             return
 
-        file_name = extractor.get_file_name()
-        file_type = extractor.__class__.__name__
+        file_name = extractor.get_file_name()  # Get the name of the file being processed
+        file_type = extractor.__class__.__name__  # Get the class name of the extractor (for file type)
 
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor()  # Create a cursor for executing SQL statements
         try:
+            # Insert the file information into the extracted_files table
             cursor.execute(
                 "INSERT INTO extracted_files (file_name, file_type) VALUES (%s, %s)",
                 (file_name, file_type)
             )
-            file_id = cursor.lastrowid  # Get the id of the inserted file
+            file_id = cursor.lastrowid  # Get the ID of the newly inserted file
 
             # Store extracted text
             text = extractor.extract_text()
@@ -119,16 +142,16 @@ class SQLStorage:
                     (file_id, text)
                 )
 
-            # Store tables
+            # Store extracted tables
             tables = extractor.extract_tables()
             for table in tables:
-                table_data = '\n'.join([','.join(row) for row in table])
+                table_data = '\n'.join([','.join(row) for row in table])  # Format table data as CSV-like string
                 cursor.execute(
                     "INSERT INTO extracted_tables (file_id, table_data) VALUES (%s, %s)",
                     (file_id, table_data)
                 )
 
-            # Store images
+            # Store extracted images (paths to the images saved locally)
             images = extractor.extract_images()
             for image_path in images:
                 cursor.execute(
@@ -136,17 +159,17 @@ class SQLStorage:
                     (file_id, image_path)
                 )
 
-            # Store metadata
+            # Store extracted metadata as key-value pairs
             metadata = extractor.extract_metadata()
             if isinstance(metadata, dict):
                 for key, value in metadata.items():
-                    if value:
+                    if value:  # Store non-empty metadata values
                         cursor.execute(
                             "INSERT INTO extracted_metadata (file_id, metadata_key, metadata_value) VALUES (%s, %s, %s)",
                             (file_id, key, value)
                         )
 
-            # Store links
+            # Store extracted hyperlinks
             links = extractor.extract_links()
             for link in links:
                 cursor.execute(
@@ -154,17 +177,20 @@ class SQLStorage:
                     (file_id, link)
                 )
 
-            self.connection.commit()
+            self.connection.commit()  # Commit all the data insertions
             print("Data stored successfully.")
 
         except Error as e:
+            # Handle errors during data storage and rollback changes
             print(f"Error storing data: {e}")
-            self.connection.rollback()  # Rollback in case of error
+            self.connection.rollback()
         finally:
-            cursor.close()
+            cursor.close()  # Close the cursor after the data is stored
 
     def close_connection(self):
-        """Close the database connection."""
+        """
+        Close the database connection if it is still open.
+        """
         if self.connection and self.connection.is_connected():
             self.connection.close()
             print("Database connection closed.")
