@@ -16,10 +16,9 @@ This Assignment provides a modular Python class structure for extracting text, h
 ```
 Python-Assignment/
 ├── file_loader/
-│   ├── file_loader.py         # Abstract class for file loading
-│   ├── pdf_loader.py          # Class for loading and processing PDF files
-│   ├── docx_loader.py         # Class for loading and processing DOCX files
-│   └── ppt_loader.py          # Class for loading and processing PPT files
+│   ├── abstract_file_loader.py          # Abstract class for file loading
+│   ├── concrete_file_loader.py          # Class for loading and processing files
+│
 ├── data_extractor/
 │   └── data_extractor.py      # Class for extracting text, images, tables, and links
 ├── storage/
