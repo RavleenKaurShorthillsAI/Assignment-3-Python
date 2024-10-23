@@ -19,27 +19,19 @@ class FileStorage:
         os.makedirs(base_folder, exist_ok=True)
 
 
-        # Extract text using the extractor
+        
         data = extractor.extract_text()
 
-        # Ensure the base_folder exists
-        if not os.path.exists(base_folder):
-            os.makedirs(base_folder)
-
-        # Print the extracted data for debugging
-        # print(f"Extracted Data: {data}")
-
-        # Check if data contains 'text' and if the text is not empty
+        
         if data and 'text' in data and data['text'].strip():
             text_file_path = os.path.join(base_folder, "extracted_text.txt")
             
             # Write only the 'text' part of the data to the file
             with open(text_file_path, 'w', encoding='utf-8') as text_file:
                 text_file.write(data['text'])
-            
             print(f"Text data saved to {text_file_path}")
         else:
-            print("No text data extracted.")
+            print("No text data found.")
 
 
         # Store tables
